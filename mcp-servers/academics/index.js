@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const PORT = process.env.PORT || 3004;
 app.use(cors());
 app.use(express.json());
 
@@ -22,6 +23,10 @@ const holidays = [
   { name: "End Semester Break", date: "2026-07-10" },
 ];
 
+app.get('/health', (req, res) => {
+  res.json({ ok: true, source: 'academics' });
+});
+
 // Get full schedule
 app.get('/api/mcp/academics', (req, res) => {
   res.json({ source: "academics", schedule, exams, holidays });
@@ -30,8 +35,13 @@ app.get('/api/mcp/academics', (req, res) => {
 // Search by course name
 app.get('/api/mcp/academics/search', (req, res) => {
   const query = req.query.q?.toLowerCase() || '';
-  const results = schedule.filter(s => s.course.toLowerCase().includes(query));
+  const results = schedule.filter((s) =>
+    s.course.toLowerCase().includes(query) ||
+    s.faculty.toLowerCase().includes(query) ||
+    s.room.toLowerCase().includes(query) ||
+    s.days.toLowerCase().includes(query)
+  );
   res.json({ source: "academics", query, results });
 });
 
-app.listen(3004, () => console.log('🎓 Academics MCP running on port 3004'));
+app.listen(PORT, () => console.log(`🎓 Academics MCP running on port ${PORT}`));

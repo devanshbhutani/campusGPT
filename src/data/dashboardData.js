@@ -1,72 +1,132 @@
-export const MCP_CARDS = [
+export const CHAT_API_URL = 'http://localhost:3005/api/chat'
+
+export const ANNOUNCEMENTS = [
+  { id: 1, text: 'Power maintenance in Block B on June 16', priority: 'high' },
+  { id: 2, text: 'Library extended hours till June 25', priority: 'low' },
+  { id: 3, text: 'Lost: Black Kindle near Café-2', priority: 'medium' },
+  { id: 4, text: 'Convocation rehearsal at North Gate → Metro Station next 06:15', priority: 'low' },
+]
+
+export const DASHBOARD_PANELS = [
   {
+    key: 'library',
     title: 'Stacks Desk',
-    subtitle: '6 titles back on the shelves',
-    items: [
-      { title: 'Introduction to Algorithms', details: 'Cormen, Leiserson, Rivest, Stein', status: '2/4' },
-      { title: 'The Pragmatic Programmer', details: 'Hunt & Thomas', status: '1/2' },
-      { title: 'Deep Learning', details: 'Goodfellow, Bengio, Courville', status: '2/2' },
-      { title: 'Sapiens', details: 'Yuval Noah Harari', status: '3/5' },
-    ],
+    endpoint: 'http://localhost:3001/api/mcp/library',
     footer: 'By the Library MCP',
+    loadingSubtitle: 'Loading library records...',
+    emptyText: 'No books matched the current selection.',
+    buildCard(payload = {}) {
+      const books = Array.isArray(payload.books) ? payload.books : []
+
+      return {
+        title: 'Stacks Desk',
+        subtitle: `${books.length} titles in the catalog`,
+        items: books.map((book) => ({
+          title: book.title,
+          details: book.author,
+          status: book.available ? `${book.copies} copies` : 'Checked out',
+        })),
+        footer: 'By the Library MCP',
+        emptyText: 'No books matched the current selection.',
+      }
+    },
   },
   {
+    key: 'cafeteria',
+    title: 'Cafeteria Desk',
+    endpoint: 'http://localhost:3002/api/mcp/cafeteria',
+    footer: 'By the Cafeteria MCP',
+    loadingSubtitle: 'Loading daily menu...',
+    emptyText: 'No menu is available right now.',
+    buildCard(payload = {}) {
+      const menu = payload.menu ?? {}
+      const orderedMeals = ['breakfast', 'lunch', 'dinner']
+
+      return {
+        title: 'Cafeteria Desk',
+        subtitle: `${payload.day || 'Today'} · Weekly menu`,
+        items: orderedMeals
+          .filter((meal) => menu[meal])
+          .map((meal) => ({
+            title: meal.charAt(0).toUpperCase() + meal.slice(1),
+            details: menu[meal],
+            status: payload.day || 'Live',
+          })),
+        footer: 'By the Cafeteria MCP',
+        emptyText: 'No menu is available right now.',
+      }
+    },
+  },
+  {
+    key: 'events',
     title: 'Calendar Desk',
-    subtitle: '6 happenings on the bill',
-    items: [
-      { title: 'TechFest 2026 — Opening Ceremony', details: '2026-06-12 · 10:00 · Main Auditorium' },
-      { title: 'AI Workshop: Build with LLMs', details: '2026-06-12 · 14:00 · CS Lab 3' },
-      { title: 'Open Mic Night', details: '2026-06-13 · 19:30 · Amphitheatre' },
-    ],
+    endpoint: 'http://localhost:3003/api/mcp/events',
     footer: 'By the Events MCP',
+    loadingSubtitle: 'Loading campus events...',
+    emptyText: 'No events were returned.',
+    buildCard(payload = {}) {
+      const events = Array.isArray(payload.events) ? payload.events : []
+
+      return {
+        title: 'Calendar Desk',
+        subtitle: `${events.length} upcoming events`,
+        items: events.map((event) => ({
+          title: event.name,
+          details: `${event.date} · ${event.time} · ${event.venue}`,
+          status: event.category.toUpperCase(),
+        })),
+        footer: 'By the Events MCP',
+        emptyText: 'No events were returned.',
+      }
+    },
   },
   {
+    key: 'academics',
     title: 'Registrar',
-    subtitle: "3 classes on Monday's docket",
-    items: [
-      { title: 'CS301 Operating Systems', details: 'B-204', status: '09:00' },
-      { title: 'MA204 Linear Algebra', details: 'A-101', status: '11:00' },
-      { title: 'CS342 Databases Lab', details: 'Lab-2', status: '14:00' },
-    ],
+    endpoint: 'http://localhost:3004/api/mcp/academics',
     footer: 'By the Academics MCP',
-  },
-  {
-    title: 'Bulletin',
-    subtitle: '4 bulletins on the wire',
-    items: [
-      { label: 'HIGH', title: 'Power maintenance in Block B', details: 'Power will be down in Block B from 14:00 to 16:30 on June 10.' },
-      { label: 'MEDIUM', title: 'Library extended hours', details: 'From June 10–25 the central library stays open later each night.' },
-      { label: 'LOW', title: 'Lost: Black Kindle near Café-2', details: 'If found please drop at the Student Affairs desk.' },
-    ],
-    footer: 'By the Announcements MCP',
+    loadingSubtitle: 'Loading class schedule...',
+    emptyText: 'No classes were returned.',
+    buildCard(payload = {}) {
+      const schedule = Array.isArray(payload.schedule) ? payload.schedule : []
+
+      return {
+        title: 'Registrar',
+        subtitle: `${schedule.length} classes on file`,
+        items: schedule.map((entry) => ({
+          title: entry.course,
+          details: `${entry.faculty} · ${entry.room} · ${entry.days}`,
+          status: entry.time,
+        })),
+        footer: 'By the Academics MCP',
+        emptyText: 'No classes were returned.',
+      }
+    },
   },
 ]
 
-export const MCP_ENDPOINTS = [
-  '/api/mcp/library',
-  '/api/mcp/events',
-  '/api/mcp/transport',
-  '/api/mcp/cafeteria',
-  '/api/mcp/academics',
-  '/api/mcp/announcements',
-]
-
-export const TOOL_ROUTES = [
-  { id: 'library_search', label: 'Library Search', keywords: ['library', 'book', 'clean code', 'catalog', 'shelves'] },
-  { id: 'events', label: 'Events Desk', keywords: ['techfest', 'workshop', 'open mic', 'event', 'happening', 'calendar'] },
-  { id: 'transport', label: 'Transit Desk', keywords: ['shuttle', 'metro', 'transport', 'route', 'bus', 'station'] },
-  { id: 'academics', label: 'Registrar', keywords: ['class', 'course', 'exam', 'schedule', 'docket'] },
-]
-
-export const INITIAL_MESSAGES = [
+export const INITIAL_CHAT_MESSAGES = [
   {
-    role: 'user',
-    text: "Is 'Clean Code' available in the library right now?",
-    detail: 'Dispatch',
-  },
-  {
+    id: 'chat-welcome',
     role: 'assistant',
-    text: 'I encountered a technical issue while searching the library database. Please try again in a moment, or visit the library circulation desk to check the status of "Clean Code".',
-    detail: 'library_search',
+    text: 'Ask me about books, meals, events, or class schedules. I will route your request to the right MCP server.',
+    detail: 'routing_ready',
   },
 ]
+
+export function createInitialDashboardCards() {
+  return DASHBOARD_PANELS.map((panel) => ({
+    key: panel.key,
+    title: panel.title,
+    subtitle: panel.loadingSubtitle,
+    items: [],
+    footer: panel.footer,
+    loading: true,
+    error: '',
+    emptyText: panel.emptyText,
+  }))
+}
+
+export function buildAnnouncementTicker() {
+  return ANNOUNCEMENTS.map((item) => `${item.priority.toUpperCase()} - ${item.text}`).join(' · ')
+}

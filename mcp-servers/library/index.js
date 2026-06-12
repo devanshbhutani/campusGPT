@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
@@ -12,6 +13,10 @@ const books = [
   { id: 5, title: "Sapiens", author: "Yuval Noah Harari", available: true, copies: 5 },
   { id: 6, title: "CS342 Databases Textbook", author: "Ramakrishnan", available: false, copies: 0 },
 ];
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true, source: 'library' });
+});
 
 // Get all books
 app.get('/api/mcp/library', (req, res) => {
@@ -28,4 +33,4 @@ app.get('/api/mcp/library/search', (req, res) => {
   res.json({ source: "library", query, results });
 });
 
-app.listen(3001, () => console.log('📚 Library MCP running on port 3001'));
+app.listen(PORT, () => console.log(`📚 Library MCP running on port ${PORT}`));

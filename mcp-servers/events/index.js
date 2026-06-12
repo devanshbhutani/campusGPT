@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const PORT = process.env.PORT || 3003;
 app.use(cors());
 app.use(express.json());
 
@@ -13,6 +14,10 @@ const events = [
   { id: 6, name: "End Semester Sports Meet", date: "2026-06-20", time: "08:00", venue: "Sports Ground", category: "sports" },
 ];
 
+app.get('/health', (req, res) => {
+  res.json({ ok: true, source: 'events' });
+});
+
 // Get all events
 app.get('/api/mcp/events', (req, res) => {
   res.json({ source: "events", events });
@@ -20,8 +25,9 @@ app.get('/api/mcp/events', (req, res) => {
 
 // Get events by category
 app.get('/api/mcp/events/category/:cat', (req, res) => {
-  const results = events.filter(e => e.category === req.params.cat);
-  res.json({ source: "events", category: req.params.cat, results });
+  const category = req.params.cat.toLowerCase();
+  const results = events.filter(e => e.category === category);
+  res.json({ source: "events", category, results });
 });
 
-app.listen(3003, () => console.log('📅 Events MCP running on port 3003'));
+app.listen(PORT, () => console.log(`📅 Events MCP running on port ${PORT}`));

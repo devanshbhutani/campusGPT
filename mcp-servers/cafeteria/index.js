@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(express.json());
 
@@ -14,6 +15,15 @@ const menu = {
   Sunday:    { breakfast: "Chole Bhature", lunch: "Dal Makhani, Jeera Rice", dinner: "Paneer Tikka, Naan" },
 };
 
+function normalizeDayName(day = '') {
+  if (!day) return '';
+  return day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+}
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true, source: 'cafeteria' });
+});
+
 // Get today's menu
 app.get('/api/mcp/cafeteria', (req, res) => {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -22,10 +32,10 @@ app.get('/api/mcp/cafeteria', (req, res) => {
 
 // Get menu for a specific day
 app.get('/api/mcp/cafeteria/:day', (req, res) => {
-  const day = req.params.day;
+  const day = normalizeDayName(req.params.day);
   const dayMenu = menu[day];
   if (!dayMenu) return res.status(404).json({ error: "Day not found" });
   res.json({ source: "cafeteria", day, menu: dayMenu });
 });
 
-app.listen(3002, () => console.log('🍽️ Cafeteria MCP running on port 3002'));
+app.listen(PORT, () => console.log(`🍽️ Cafeteria MCP running on port ${PORT}`));
