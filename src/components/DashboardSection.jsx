@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import DeskCard from './DeskCard'
 import { DASHBOARD_PANELS, createInitialDashboardCards } from '../data/dashboardData'
 
-function DashboardSection() {
+function DashboardSection({ profile, onAskDesk }) {
   const [cards, setCards] = useState(() => createInitialDashboardCards())
 
   useEffect(() => {
@@ -30,7 +30,7 @@ function DashboardSection() {
             key: panel.key,
             loading: false,
             error: '',
-            ...result.value,
+            ...panel.buildCard(result.value, profile),
           }
         }
 
@@ -53,17 +53,22 @@ function DashboardSection() {
       isActive = false
       controller.abort()
     }
-  }, [])
+  }, [profile])
 
   return (
     <main className="desk-grid">
       <div className="section-head">
         <h2>Today's Desks</h2>
-        <span>Section A</span>
+        <span>{profile?.branch || 'Section A'}</span>
       </div>
 
       {cards.map((card) => (
-        <DeskCard key={card.key} card={card} />
+        <DeskCard
+          key={card.key}
+          card={card}
+          onAction={onAskDesk ? () => onAskDesk(card.title) : undefined}
+          actionLabel="Search ↗"
+        />
       ))}
 
       <footer className="colophon-card">

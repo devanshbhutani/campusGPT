@@ -96,21 +96,6 @@ function getTextFromBlocks(blocks = []) {
     .trim()
 }
 
-function getPrimarySource(toolName) {
-  switch (toolName) {
-    case 'library_search':
-      return 'library'
-    case 'cafeteria_menu':
-      return 'cafeteria'
-    case 'events_search':
-      return 'events'
-    case 'academics_search':
-      return 'academics'
-    default:
-      return 'library'
-  }
-}
-
 function todayDayName() {
   return new Date().toLocaleDateString('en-US', { weekday: 'long' })
 }

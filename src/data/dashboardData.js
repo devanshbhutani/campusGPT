@@ -7,6 +7,36 @@ export const ANNOUNCEMENTS = [
   { id: 4, text: 'Convocation rehearsal at North Gate → Metro Station next 06:15', priority: 'low' },
 ]
 
+export const SEARCH_EXAMPLES = [
+  'What is in the library?',
+  'My club events this week',
+  'Which courses match my branch?',
+  'What is for lunch today?',
+]
+
+const BRANCH_PREFIXES = [
+  ['computer', 'CS'],
+  ['cs', 'CS'],
+  ['electrical', 'EC'],
+  ['electronics', 'EC'],
+  ['mechanical', 'ME'],
+  ['civil', 'CE'],
+  ['chemical', 'CH'],
+  ['mathematics', 'MA'],
+  ['math', 'MA'],
+  ['physics', 'PH'],
+]
+
+function normalize(value = '') {
+  return String(value).toLowerCase().trim()
+}
+
+function findBranchPrefix(branch = '') {
+  const branchName = normalize(branch)
+  const match = BRANCH_PREFIXES.find(([needle]) => branchName.includes(needle))
+  return match ? match[1] : ''
+}
+
 export const DASHBOARD_PANELS = [
   {
     key: 'library',
@@ -64,13 +94,22 @@ export const DASHBOARD_PANELS = [
     footer: 'By the Events MCP',
     loadingSubtitle: 'Loading campus events...',
     emptyText: 'No events were returned.',
-    buildCard(payload = {}) {
+    buildCard(payload = {}, profile = {}) {
       const events = Array.isArray(payload.events) ? payload.events : []
+      const clubs = Array.isArray(profile.clubs) ? profile.clubs : []
+      const filteredEvents = clubs.length
+        ? events.filter((event) => {
+            const haystack = normalize(`${event.name} ${event.category} ${event.venue}`)
+            return clubs.some((club) => haystack.includes(normalize(club))) || event.category === 'club'
+          })
+        : events
+
+      const visibleEvents = filteredEvents.length > 0 ? filteredEvents : events
 
       return {
         title: 'Calendar Desk',
-        subtitle: `${events.length} upcoming events`,
-        items: events.map((event) => ({
+        subtitle: clubs.length ? `${visibleEvents.length} club-linked events` : `${events.length} upcoming events`,
+        items: visibleEvents.map((event) => ({
           title: event.name,
           details: `${event.date} · ${event.time} · ${event.venue}`,
           status: event.category.toUpperCase(),
@@ -87,13 +126,19 @@ export const DASHBOARD_PANELS = [
     footer: 'By the Academics MCP',
     loadingSubtitle: 'Loading class schedule...',
     emptyText: 'No classes were returned.',
-    buildCard(payload = {}) {
+    buildCard(payload = {}, profile = {}) {
       const schedule = Array.isArray(payload.schedule) ? payload.schedule : []
+      const prefix = findBranchPrefix(profile.branch)
+      const filteredSchedule = prefix
+        ? schedule.filter((entry) => normalize(entry.course).startsWith(normalize(prefix)))
+        : schedule
+
+      const visibleSchedule = filteredSchedule.length > 0 ? filteredSchedule : schedule
 
       return {
         title: 'Registrar',
-        subtitle: `${schedule.length} classes on file`,
-        items: schedule.map((entry) => ({
+        subtitle: prefix ? `${visibleSchedule.length} classes for ${profile.branch}` : `${schedule.length} classes on file`,
+        items: visibleSchedule.map((entry) => ({
           title: entry.course,
           details: `${entry.faculty} · ${entry.room} · ${entry.days}`,
           status: entry.time,
@@ -130,3 +175,133 @@ export function createInitialDashboardCards() {
 export function buildAnnouncementTicker() {
   return ANNOUNCEMENTS.map((item) => `${item.priority.toUpperCase()} - ${item.text}`).join(' · ')
 }
+
+export function createDefaultProfile() {
+  return {
+    email: '',
+    username: '',
+    branch: '',
+    year: '',
+    semester: '',
+    clubs: [],
+    favDishes: [],
+    isOnboarded: false,
+  }
+}
+
+export function normalizeProfile(profile = {}) {
+  return {
+    ...createDefaultProfile(),
+    ...profile,
+    email: profile.email || '',
+    username: profile.username || '',
+    branch: profile.branch || '',
+    year: profile.year || '',
+    semester: profile.semester || '',
+    clubs: Array.isArray(profile.clubs) ? profile.clubs : [],
+    favDishes: Array.isArray(profile.favDishes) ? profile.favDishes : [],
+    isOnboarded: Boolean(profile.isOnboarded),
+  }
+}
+
+export function loadProfileFromStorage() {
+  if (typeof window === 'undefined') {
+    return createDefaultProfile()
+  }
+
+  try {
+    const raw = window.localStorage.getItem('campus-dashboard.profile')
+    if (!raw) return createDefaultProfile()
+
+    return normalizeProfile(JSON.parse(raw))
+  } catch {
+    return createDefaultProfile()
+  }
+}
+
+export function saveProfileToStorage(profile) {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.setItem('campus-dashboard.profile', JSON.stringify(normalizeProfile(profile)))
+}
+
+export function clearProfileStorage() {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.removeItem('campus-dashboard.profile')
+}
+
+export function loadViewFromStorage() {
+  if (typeof window === 'undefined') {
+    return 'dashboard'
+  }
+
+  const savedView = window.localStorage.getItem('campus-dashboard.view')
+  return savedView === 'search' || savedView === 'dashboard' ? savedView : 'dashboard'
+}
+
+export function saveViewToStorage(view) {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.setItem('campus-dashboard.view', view)
+}
+
+export const BRANCH_OPTIONS = [
+  'Computer Science and Engineering',
+  'Electrical Engineering',
+  'Electronics and Communication',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Chemical Engineering',
+  'Mathematics and Computing',
+  'Physics',
+]
+
+export const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year']
+
+export const CLUB_OPTIONS = [
+  'Coding Club',
+  'Robotics Club',
+  'Photography Club',
+  'Music Club',
+  'Drama Society',
+  'Sports Club',
+  'AI Club',
+  'Finance Club',
+]
+
+export const DISH_OPTIONS = [
+  'Poha',
+  'Chai',
+  'Dal Tadka',
+  'Roti',
+  'Rice',
+  'Curd',
+  'Paneer Butter Masala',
+  'Naan',
+  'Idli',
+  'Sambar',
+  'Rajma',
+  'Salad',
+  'Aloo Gobi',
+  'Paratha',
+  'Pickle',
+  'Chole',
+  'Bhature',
+  'Raita',
+  'Dal Makhani',
+  'Upma',
+  'Juice',
+  'Mix Veg',
+  'Shahi Paneer',
+  'Bread Butter',
+  'Eggs',
+  'Kadhi Pakora',
+  'Palak Paneer',
+  'Puri',
+  'Sabzi',
+  'Special Biryani',
+  'Pasta',
+  'Garlic Bread',
+  'Paneer Tikka',
+]

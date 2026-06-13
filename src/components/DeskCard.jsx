@@ -1,4 +1,4 @@
-function DeskCard({ card }) {
+function DeskCard({ card, onAction, actionLabel = 'Ask ↗' }) {
   return (
     <article className="desk-card">
       <div className="desk-card-header">
@@ -32,7 +32,11 @@ function DeskCard({ card }) {
 
       <div className="desk-card-footer">
         <span>{card.footer}</span>
-        <button type="button">Ask ↗</button>
+        {onAction ? (
+          <button type="button" onClick={onAction}>
+            {actionLabel}
+          </button>
+        ) : null}
       </div>
     </article>
   )
